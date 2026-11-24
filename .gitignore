@@ -3,3 +3,15 @@ vendor/
 node_modules/
 .idea/
 .vscode/
+
+# Local database config (each member has their own)
+config/database.local.php
+
+# Uploads and generated files
+uploads/
+generated/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
