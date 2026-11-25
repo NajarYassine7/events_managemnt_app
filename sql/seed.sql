@@ -55,25 +55,25 @@ INSERT INTO events (id, title, description, event_date, event_time, venue_id, ma
 -- registrations (registered_at is explicit so the waiting list order is stable)
 -- Event 2: max 3 -> seats taken = 3 (2 confirmed + 1 pending), 2 waitlisted
 -- ---------------------------------------------------------------
-INSERT INTO registrations (id, user_id, event_id, status, waitlist_position, registered_at) VALUES
+INSERT INTO registrations (id, user_id, event_id, status, registered_at) VALUES
 -- event 1: conference
-(1,  4, 1, 'confirmed',  NULL, '2026-11-18 10:00:00'),
-(2,  5, 1, 'confirmed',  NULL, '2026-11-18 10:05:00'),
-(3,  9, 1, 'pending',    NULL, '2026-11-19 08:30:00'),
+(1,  4, 1, 'confirmed',  '2026-11-18 10:00:00'),
+(2,  5, 1, 'confirmed',  '2026-11-18 10:05:00'),
+(3,  9, 1, 'pending',    '2026-11-19 08:30:00'),
 -- event 2: FULL + waiting list
-(4,  4, 2, 'confirmed',  NULL, '2026-11-20 09:00:00'),
-(5,  5, 2, 'confirmed',  NULL, '2026-11-20 09:05:00'),
-(6,  6, 2, 'pending',    NULL, '2026-11-20 09:10:00'),
-(7,  7, 2, 'waitlisted', 1,    '2026-11-20 09:20:00'),
-(8,  8, 2, 'waitlisted', 2,    '2026-11-20 09:30:00'),
+(4,  4, 2, 'confirmed',  '2026-11-20 09:00:00'),
+(5,  5, 2, 'confirmed',  '2026-11-20 09:05:00'),
+(6,  6, 2, 'pending',    '2026-11-20 09:10:00'),
+(7,  7, 2, 'waitlisted', '2026-11-20 09:20:00'),
+(8,  8, 2, 'waitlisted', '2026-11-20 09:30:00'),
 -- event 3: all the other statuses
-(9,  4, 3, 'pending',    NULL, '2026-11-21 11:00:00'),
-(10, 5, 3, 'rejected',   NULL, '2026-11-21 11:10:00'),
-(11, 9, 3, 'cancelled',  NULL, '2026-11-21 11:20:00'),
+(9,  4, 3, 'pending',    '2026-11-21 11:00:00'),
+(10, 5, 3, 'rejected',   '2026-11-21 11:10:00'),
+(11, 9, 3, 'cancelled',  '2026-11-21 11:20:00'),
 -- event 4: past event
-(12, 4, 4, 'confirmed',  NULL, '2026-11-01 09:00:00'),
-(13, 5, 4, 'confirmed',  NULL, '2026-11-01 09:10:00'),
-(14, 6, 4, 'confirmed',  NULL, '2026-11-01 09:20:00');
+(12, 4, 4, 'confirmed',  '2026-11-01 09:00:00'),
+(13, 5, 4, 'confirmed',  '2026-11-01 09:10:00'),
+(14, 6, 4, 'confirmed',  '2026-11-01 09:20:00');
 
 -- ---------------------------------------------------------------
 -- attendance (only for the past event, marked by its organizer, user 2)
