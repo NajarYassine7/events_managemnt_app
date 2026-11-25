@@ -4,13 +4,19 @@
 
 USE events_db;
 
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE attendance;
-TRUNCATE TABLE registrations;
-TRUNCATE TABLE events;
-TRUNCATE TABLE venues;
-TRUNCATE TABLE users;
-SET FOREIGN_KEY_CHECKS = 1;
+-- Empty the tables, children first (TRUNCATE fails on tables referenced by foreign keys)
+DELETE FROM attendance;
+DELETE FROM registrations;
+DELETE FROM events;
+DELETE FROM venues;
+DELETE FROM users;
+
+-- Restart the id counters so a reset always gives the same ids
+ALTER TABLE attendance    AUTO_INCREMENT = 1;
+ALTER TABLE registrations AUTO_INCREMENT = 1;
+ALTER TABLE events        AUTO_INCREMENT = 1;
+ALTER TABLE venues        AUTO_INCREMENT = 1;
+ALTER TABLE users         AUTO_INCREMENT = 1;
 
 -- ---------------------------------------------------------------
 -- users (password for all: Test1234!)
