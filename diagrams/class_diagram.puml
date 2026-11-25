@@ -1,0 +1,76 @@
+@startuml
+enum Role { admin\norganizer\nparticipant }
+enum RegistrationStatus { pending\nconfirmed\nwaitlisted\ncancelled\nrejected }
+
+class User {
+  +id: int
+  +name: string
+  +email: string
+  +password_hash: string
+  +role: Role
+  +phone: string
+  +created_at: datetime
+  +isAdmin(): bool
+  +isOrganizer(): bool
+  +isParticipant(): bool
+}
+class Venue {
+  +id: int
+  +name: string
+  +address: string
+  +capacity: int
+  +description: text
+}
+class Event {
+  +id: int
+  +title: string
+  +description: text
+  +event_date: date
+  +event_time: time
+  +max_capacity: int
+  +organizer_id: int
+  +venue_id: int
+  +created_at: datetime
+  +seatsTaken(): int
+  +availableSeats(): int
+  +isFull(): bool
+}
+class Registration {
+  +id: int
+  +user_id: int
+  +event_id: int
+  +status: RegistrationStatus
+  +waitlist_position: int
+  +registered_at: datetime
+  +updated_at: datetime
+}
+class Attendance {
+  +id: int
+  +registration_id: int
+  +present: bool
+  +marked_at: datetime
+  +marked_by: int
+}
+class RegistrationService {
+  +register(userId, eventId)
+  +cancel(registrationId)
+  +approve(registrationId)
+  +reject(registrationId)
+  +promoteNext(eventId)
+}
+
+User "1" -- "0..*" Event : organizes
+Venue "1" -- "0..*" Event : hosts
+Event "1" -- "0..*" Registration
+User "1" -- "0..*" Registration : makes
+Registration "1" -- "0..1" Attendance
+User "1" -- "0..*" Attendance : marks
+RegistrationService ..> Registration
+User .. Role
+Registration .. RegistrationStatus
+
+note right of Event
+  max_capacity <= Venue.capacity
+  (checked in PHP)
+end note
+@enduml

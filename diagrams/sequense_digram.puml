@@ -1,0 +1,54 @@
+@startuml
+actor "Organizer / Admin" as Org
+participant "Event Form" as Form
+participant EventController as Ctrl
+participant Venue
+participant Event
+database DB
+
+== Open the form ==
+Org -> Form : Open "Create event"
+Form -> Ctrl : GET /events/create
+Ctrl -> Ctrl : check session and role (organizer or admin)
+alt not authenticated or role not allowed
+  Ctrl --> Org : redirect to login / 403
+else authorized
+  Ctrl -> Venue : list venues
+  Venue -> DB : SELECT venues
+  DB --> Venue : venues
+  Venue --> Ctrl : venues
+  Ctrl --> Form : form with venue list
+end
+
+== Submit ==
+Org -> Form : Fill in title, description, event_date,\nevent_time, max_capacity, venue_id
+Form -> Ctrl : POST /events (CSRF token)
+Ctrl -> Ctrl : validate fields (required, event_date >= today,\nmax_capacity >= 1)
+alt invalid fields
+  Ctrl --> Form : redisplay with error messages
+else valid fields
+  Ctrl -> Venue : find(venue_id)
+  Venue -> DB : SELECT venue
+  DB --> Venue : venue
+  Venue --> Ctrl : venue
+  alt venue not found
+    Ctrl --> Form : error "venue does not exist"
+  else max_capacity > venue.capacity
+    Ctrl --> Form : error "capacity exceeds venue capacity"
+  else
+    Ctrl -> Event : find event with same venue_id,\nevent_date, event_time
+    Event -> DB : SELECT event
+    DB --> Event : result
+    alt venue already booked
+      Event --> Ctrl : existing event
+      Ctrl --> Form : error "venue already booked at this time"
+    else venue available
+      Ctrl -> Event : create(data, organizer_id = session user)
+      Event -> DB : INSERT event
+      DB --> Event : saved
+      Event --> Ctrl : event
+      Ctrl --> Org : redirect to "My events" + success message
+    end
+  end
+end
+@enduml

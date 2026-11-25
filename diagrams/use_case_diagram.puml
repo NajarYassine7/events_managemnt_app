@@ -1,0 +1,74 @@
+@startuml
+left to right direction
+actor Participant
+actor Organizer
+actor Admin
+Organizer --|> Participant
+Admin --|> Organizer
+
+rectangle "Event Management System" {
+  usecase "Sign up" as SignUp
+  usecase "Log in" as Login
+  usecase "Log out" as Logout
+  usecase "Manage profile" as Profile
+  usecase "View events and details" as View
+  usecase "Register for an event" as Reg
+  usecase "Join waiting list" as Wait
+  usecase "Cancel registration" as Cancel
+  usecase "Promote first waitlisted registration" as Promote
+  usecase "View participation history" as Hist
+
+  usecase "Create / Edit / Delete own events" as OrgEvents
+  usecase "View venues" as ViewVenues
+  usecase "View participants of an event" as Follow
+  usecase "Validate / Reject registrations" as Validate
+  usecase "Register a participant" as RegOther
+  usecase "Record attendance" as Att
+  usecase "Generate attendance list (PDF)" as Pdf
+
+  usecase "Manage all events" as AdmEvents
+  usecase "Manage users and roles" as Users
+  usecase "Manage venues" as Venue
+  usecase "View statistics" as Stats
+}
+
+Participant --> SignUp
+Participant --> Login
+Participant --> Logout
+Participant --> Profile
+Participant --> View
+Participant --> Reg
+Participant --> Cancel
+Participant --> Hist
+
+Organizer --> OrgEvents
+Organizer --> Follow
+Organizer --> Validate
+Organizer --> RegOther
+Organizer --> Att
+Organizer --> Pdf
+
+Admin --> AdmEvents
+Admin --> Users
+Admin --> Venue
+Admin --> Stats
+
+OrgEvents ..> ViewVenues : <<include>>
+Wait ..> Reg : <<extend>>
+Promote ..> Cancel : <<extend>>
+
+note right of Wait
+  Extension point: event is full
+end note
+note right of Promote
+  Also triggered when a registration is rejected
+end note
+note bottom of Att
+  Only confirmed registrations can be marked
+end note
+note bottom of Login
+  All use cases except Sign up, Log in and
+  View events require authentication.
+  Admin inherits all Organizer use cases.
+end note
+@enduml
