@@ -20,6 +20,7 @@ CREATE TABLE users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name          VARCHAR(100) NOT NULL,
   email         VARCHAR(150) NOT NULL,
+  phone VARCHAR(20) NULL,
   password_hash VARCHAR(255) NOT NULL,
   role          ENUM('admin','organizer','participant') NOT NULL DEFAULT 'participant',
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
