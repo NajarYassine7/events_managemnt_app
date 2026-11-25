@@ -69,8 +69,7 @@ CREATE TABLE events (
 -- ---------------------------------------------------------------
 -- registrations
 -- Seats taken = pending + confirmed.
--- Waiting list order: registered_at ASC, then id ASC (tiebreak).
--- waitlist_position is optional display info, only set when status = 'waitlisted'.
+-- Waiting list order: registered_at ASC, then id ASC. The position is computed in queries, not stored.
 -- ---------------------------------------------------------------
 CREATE TABLE registrations (
   id                INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -78,7 +77,6 @@ CREATE TABLE registrations (
   event_id          INT UNSIGNED NOT NULL,
   status            ENUM('pending','confirmed','waitlisted','cancelled','rejected')
                     NOT NULL DEFAULT 'pending',
-  waitlist_position INT UNSIGNED NULL,
   registered_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP,
