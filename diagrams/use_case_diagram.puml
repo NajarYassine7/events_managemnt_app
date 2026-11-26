@@ -1,35 +1,35 @@
 @startuml
 left to right direction
 actor Participant
-actor Organizer
-actor Admin
-Organizer --|> Participant
-Admin --|> Organizer
+actor Organisateur
+actor Administrateur
+Organisateur --|> Participant
+Administrateur --|> Organisateur
 
-rectangle "Event Management System" {
-  usecase "Sign up" as SignUp
-  usecase "Log in" as Login
-  usecase "Log out" as Logout
-  usecase "Manage profile" as Profile
-  usecase "View events and details" as View
-  usecase "Register for an event" as Reg
-  usecase "Join waiting list" as Wait
-  usecase "Cancel registration" as Cancel
-  usecase "Promote first waitlisted registration" as Promote
-  usecase "View participation history" as Hist
+rectangle "Système de gestion des événements" {
+  usecase "S'inscrire sur la plateforme" as SignUp
+  usecase "Se connecter" as Login
+  usecase "Se déconnecter" as Logout
+  usecase "Gérer son profil" as Profile
+  usecase "Consulter les événements et leurs détails" as View
+  usecase "S'inscrire à un événement" as Reg
+  usecase "Rejoindre la liste d'attente" as Wait
+  usecase "Annuler son inscription" as Cancel
+  usecase "Promouvoir la première inscription en attente" as Promote
+  usecase "Consulter l'historique de ses participations" as Hist
 
-  usecase "Create / Edit / Delete own events" as OrgEvents
-  usecase "View venues" as ViewVenues
-  usecase "View participants of an event" as Follow
-  usecase "Validate / Reject registrations" as Validate
-  usecase "Register a participant" as RegOther
-  usecase "Record attendance" as Att
-  usecase "Generate attendance list (PDF)" as Pdf
+  usecase "Créer / modifier / supprimer ses événements" as OrgEvents
+  usecase "Consulter les lieux" as ViewVenues
+  usecase "Consulter les participants d'un événement" as Follow
+  usecase "Valider / rejeter les inscriptions" as Validate
+  usecase "Inscrire un participant" as RegOther
+  usecase "Enregistrer la présence" as Att
+  usecase "Générer la liste de présence (PDF)" as Pdf
 
-  usecase "Manage all events" as AdmEvents
-  usecase "Manage users and roles" as Users
-  usecase "Manage venues" as Venue
-  usecase "View statistics" as Stats
+  usecase "Gérer tous les événements" as AdmEvents
+  usecase "Gérer les utilisateurs et les rôles" as Users
+  usecase "Gérer les lieux" as Venue
+  usecase "Consulter les statistiques" as Stats
 }
 
 Participant --> SignUp
@@ -41,34 +41,39 @@ Participant --> Reg
 Participant --> Cancel
 Participant --> Hist
 
-Organizer --> OrgEvents
-Organizer --> Follow
-Organizer --> Validate
-Organizer --> RegOther
-Organizer --> Att
-Organizer --> Pdf
+Organisateur --> OrgEvents
+Organisateur --> Follow
+Organisateur --> Validate
+Organisateur --> RegOther
+Organisateur --> Att
+Organisateur --> Pdf
 
-Admin --> AdmEvents
-Admin --> Users
-Admin --> Venue
-Admin --> Stats
+Administrateur --> AdmEvents
+Administrateur --> Users
+Administrateur --> Venue
+Administrateur --> Stats
 
 OrgEvents ..> ViewVenues : <<include>>
 Wait ..> Reg : <<extend>>
 Promote ..> Cancel : <<extend>>
 
 note right of Wait
-  Extension point: event is full
+  Point d'extension : l'événement est complet
+  (pending + confirmed = max_capacity)
 end note
 note right of Promote
-  Also triggered when a registration is rejected
+  Également déclenchée lors du rejet d'une inscription.
+  La première inscription waitlisted passe à pending,
+  selon l'ordre de registered_at
 end note
 note bottom of Att
-  Only confirmed registrations can be marked
+  Seules les inscriptions confirmed
+  peuvent être marquées
 end note
 note bottom of Login
-  All use cases except Sign up, Log in and
-  View events require authentication.
-  Admin inherits all Organizer use cases.
+  Tous les cas d'utilisation, sauf « S'inscrire sur la plateforme »,
+  « Se connecter » et « Consulter les événements »,
+  exigent une authentification.
+  L'administrateur hérite de tous les cas de l'organisateur.
 end note
 @enduml
