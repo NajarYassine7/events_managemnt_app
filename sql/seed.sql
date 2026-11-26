@@ -10,6 +10,7 @@ DELETE FROM registrations;
 DELETE FROM events;
 DELETE FROM venues;
 DELETE FROM users;
+DELETE FROM login_attempts;
 
 -- Restart the id counters so a reset always gives the same ids
 ALTER TABLE attendance    AUTO_INCREMENT = 1;

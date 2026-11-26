@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS registrations;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS venues;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS login_attempts;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ---------------------------------------------------------------
@@ -20,7 +21,7 @@ CREATE TABLE users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name          VARCHAR(100) NOT NULL,
   email         VARCHAR(150) NOT NULL,
-  phone VARCHAR(20) NULL,
+  phone         VARCHAR(20) NULL,
   password_hash VARCHAR(255) NOT NULL,
   role          ENUM('admin','organizer','participant') NOT NULL DEFAULT 'participant',
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -104,4 +105,16 @@ CREATE TABLE attendance (
     REFERENCES registrations (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_attendance_marked_by FOREIGN KEY (marked_by)
     REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------
+-- login_attempts (failed logins, used by the login limiter)
+-- ---------------------------------------------------------------
+CREATE TABLE login_attempts (
+  id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  email        VARCHAR(150) NOT NULL,
+  ip           VARCHAR(45)  NOT NULL,
+  attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_login_attempts_lookup (email, ip, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
