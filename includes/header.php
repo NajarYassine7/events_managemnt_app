@@ -15,6 +15,7 @@
         <span class="spacer"></span>
         <?php if ($navUser): ?>
             <span class="who"><?= e($navUser['name']) ?> (<?= e($navUser['role']) ?>)</span>
+            <?php if ($navUser['role'] === 'admin'): ?><a href="admin_users.php">Utilisateurs</a><?php endif; ?>
             <a href="profile.php">Profil</a>
             <form method="post" action="logout.php" class="inline">
                 <?= csrf_field() ?>
