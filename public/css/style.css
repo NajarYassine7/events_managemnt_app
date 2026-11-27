@@ -794,9 +794,9 @@ th {
 
 .filter-bar button.primary {
     flex: 0 0 auto;
+    width: auto;
     padding: 0.7rem 1.4rem;
 }
-
 .filter-bar .filter-reset {
     color: #64748b;
     text-decoration: none;
