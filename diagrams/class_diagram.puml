@@ -1,0 +1,94 @@
+@startuml
+enum Role {
+  admin
+  organizer
+  participant
+}
+enum RegistrationStatus {
+  pending
+  confirmed
+  waitlisted
+  cancelled
+  rejected
+}
+
+class User {
+  +id: int
+  +name: string
+  +email: string
+  +phone: string
+  +password_hash: string
+  +role: Role
+  +created_at: datetime
+  +isAdmin(): bool
+  +isOrganizer(): bool
+  +isParticipant(): bool
+}
+class Venue {
+  +id: int
+  +name: string
+  +address: string
+  +capacity: int
+  +description: text
+}
+class Event {
+  +id: int
+  +title: string
+  +description: text
+  +event_date: date
+  +event_time: time
+  +venue_id: int
+  +max_capacity: int
+  +organizer_id: int
+  +created_at: datetime
+  +seatsTaken(): int
+  +availableSeats(): int
+  +isFull(): bool
+}
+class Registration {
+  +id: int
+  +user_id: int
+  +event_id: int
+  +status: RegistrationStatus
+  +registered_at: datetime
+  +updated_at: datetime
+}
+class Attendance {
+  +id: int
+  +registration_id: int
+  +present: bool
+  +marked_at: datetime
+  +marked_by: int
+}
+class RegistrationService {
+  +register(userId, eventId)
+  +cancel(registrationId)
+  +approve(registrationId)
+  +reject(registrationId)
+  +promoteNext(eventId)
+}
+
+User "1" -- "0..*" Event : organise
+Venue "1" -- "0..*" Event : accueille
+Event "1" -- "0..*" Registration : reçoit
+User "1" -- "0..*" Registration : effectue
+Registration "1" -- "0..1" Attendance : donne lieu à
+User "1" -- "0..*" Attendance : enregistre
+RegistrationService ..> Registration : gère
+User .. Role
+Registration .. RegistrationStatus
+
+note right of Event
+  max_capacity <= Venue.capacity (vérifié en PHP)
+  seatsTaken() = inscriptions pending + confirmed
+end note
+note bottom of Registration
+  UNIQUE (user_id, event_id)
+  Ordre de la liste d'attente : registered_at, puis id
+  (position calculée dans les requêtes)
+end note
+note bottom of Attendance
+  UNIQUE (registration_id)
+  Inscriptions confirmed uniquement (vérifié en PHP)
+end note
+@enduml
