@@ -4,8 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/login_limiter.php';
 
-// A valid bcrypt hash, only used so that an unknown email takes as long to
-// check as a known one (otherwise response time reveals which emails exist).
+// Hash bcrypt factice pour éviter les attaques par analyse temporelle (timing attacks)
 const DUMMY_HASH = '$2y$10$ZggdQHhvPR0Y/VD4/jpOSuVc9GvHIBaJL4.31gWiS9h1rxEI9K8.6';
 
 if (current_user() !== null) {
@@ -21,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = strtolower(trim((string)($_POST['email'] ?? '')));
     $password = (string)($_POST['password'] ?? '');
 
-    $wait = login_blocked_seconds($email);                 // 1. blocked? check BEFORE the password
+    $wait = login_blocked_seconds($email);
     if ($wait > 0) {
         $error = 'Trop de tentatives échouées. Réessayez dans ' . (int)ceil($wait / 60) . ' minute(s).';
     } else {
@@ -30,35 +29,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok   = password_verify($password, $hash) && $user !== null;
 
         if ($ok) {
-            login_clear_failures($email);                  // 2. success: reset the counter
+            login_clear_failures($email);
             unset($user['password_hash']);
-            login_user($user);                             //    session_regenerate_id inside
-            flash_set('success', 'Bienvenue, ' . $user['name'] . ' !');
+            login_user($user);
+            flash_set('success', 'Ravi de vous revoir, ' . $user['name'] . ' !');
             redirect('index.php');
         }
 
-        login_record_failure($email);                      // 3. failure: record it
-        $error = 'E-mail ou mot de passe incorrect.';      //    same message whatever the cause
+        login_record_failure($email);
+        $error = 'Adresse e-mail ou mot de passe incorrect.';
     }
 }
 
 $pageTitle = 'Connexion';
 require __DIR__ . '/../includes/header.php';
 ?>
-<main class="container">
-    <h1>Connexion</h1>
-    <form method="post" class="card">
+<main class="auth-wrapper">
+    <div class="auth-header">
+        <h1>Bon retour</h1>
+        <p>Connectez-vous pour accéder à votre espace et gérer vos évènements.</p>
+    </div>
+
+    <form method="post" class="card" novalidate>
         <?= csrf_field() ?>
-        <?php if ($error !== null): ?><div class="flash flash-error"><?= e($error) ?></div><?php endif; ?>
 
-        <label for="email">Adresse e-mail</label>
-        <input id="email" name="email" type="email" value="<?= e($email) ?>" required autofocus>
+        <?php if ($error !== null): ?>
+            <div class="flash flash-error" role="alert">
+                <span><?= e($error) ?></span>
+            </div>
+        <?php endif; ?>
 
-        <label for="password">Mot de passe</label>
-        <input id="password" name="password" type="password" required autocomplete="current-password">
+        <div class="form-group">
+            <label for="email">Adresse e-mail</label>
+            <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="vous@exemple.com"
+                value="<?= e($email) ?>"
+                class="<?= $error !== null ? 'has-error' : '' ?>"
+                required
+                autofocus
+                autocomplete="email"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <div class="input-wrapper">
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Votre mot de passe"
+                    class="input-password <?= $error !== null ? 'has-error' : '' ?>"
+                    required
+                    autocomplete="current-password"
+                >
+                <button type="button" class="toggle-password" data-target="password" aria-label="Afficher ou masquer le mot de passe">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
 
         <button class="primary" type="submit">Se connecter</button>
     </form>
-    <p>Pas encore de compte ? <a href="register.php">S'inscrire</a></p>
+
+    <p class="auth-footer">
+        Pas encore de compte ? <a href="register.php">Créer un compte gratuitement</a>
+    </p>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.toggle-password').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const input = document.getElementById(btn.getAttribute('data-target'));
+            if (!input) return;
+            input.type = input.type === 'password' ? 'text' : 'password';
+        });
+    });
+});
+</script>
+
 <?php require __DIR__ . '/../includes/footer.php'; ?>

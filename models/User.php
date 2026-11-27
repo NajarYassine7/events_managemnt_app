@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/db.php';
 
 class User
 {
-    /** Columns safe to keep in memory and show: never password_hash. */
+    /** Colonnes publiques sécurisées (jamais password_hash) */
     private const PUBLIC_COLUMNS = 'id, name, email, phone, role, created_at';
 
     public static function findById(int $id): ?array
@@ -17,7 +17,7 @@ class User
         return $row === false ? null : $row;
     }
 
-    /** Includes password_hash: only for the login check. */
+    /** Inclut password_hash : uniquement pour la vérification à la connexion */
     public static function findByEmail(string $email): ?array
     {
         $stmt = db()->prepare(
@@ -35,10 +35,7 @@ class User
         return $stmt->fetchColumn() !== false;
     }
 
-    /**
-     * Creates a PARTICIPANT account. The role is not a parameter on purpose:
-     * sign up can never create an organizer or an admin.
-     */
+    /** Crée un compte participant avec mot de passe haché */
     public static function create(string $name, string $email, string $password): int
     {
         $stmt = db()->prepare(
@@ -51,15 +48,22 @@ class User
         ]);
         return (int)db()->lastInsertId();
     }
-    /** All users for the admin page (never includes password_hash). */
-    public static function findAll(): array
+
+    /** Liste tous les utilisateurs (requête préparée) */
+    public static function list(): array
     {
-        return db()
-            ->query('SELECT ' . self::PUBLIC_COLUMNS . ' FROM users ORDER BY created_at, id')
-            ->fetchAll();
+        $stmt = db()->prepare('SELECT ' . self::PUBLIC_COLUMNS . ' FROM users ORDER BY created_at DESC, id DESC');
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
-    /** True if another account (not $exceptId) already uses this e-mail. */
+    /** Alias pour compatibilité avec admin_users.php */
+    public static function findAll(): array
+    {
+        return self::list();
+    }
+
+    /** Vérifie si un autre compte utilise déjà cet e-mail */
     public static function emailTakenByOther(string $email, int $exceptId): bool
     {
         $stmt = db()->prepare('SELECT 1 FROM users WHERE email = ? AND id <> ?');
@@ -67,13 +71,19 @@ class User
         return $stmt->fetchColumn() !== false;
     }
 
-    public static function updateProfile(int $id, string $name, string $email, ?string $phone): void
+    /** Met à jour les informations d'un utilisateur */
+    public static function update(int $id, string $name, string $email, ?string $phone = null): void
     {
         $stmt = db()->prepare('UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?');
         $stmt->execute([trim($name), strtolower(trim($email)), $phone, $id]);
     }
 
-    /** The stored hash, only for checking the current password. */
+    /** Alias pour compatibilité avec profile.php */
+    public static function updateProfile(int $id, string $name, string $email, ?string $phone): void
+    {
+        self::update($id, $name, $email, $phone);
+    }
+
     public static function passwordHashOf(int $id): ?string
     {
         $stmt = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
@@ -88,7 +98,8 @@ class User
         $stmt->execute([password_hash($password, PASSWORD_DEFAULT), $id]);
     }
 
-    public static function setRole(int $id, string $role): void
+    /** Modifie le rôle d'un utilisateur */
+    public static function changeRole(int $id, string $role): void
     {
         if (!in_array($role, ['admin', 'organizer', 'participant'], true)) {
             throw new InvalidArgumentException('Rôle invalide.');
@@ -97,10 +108,13 @@ class User
         $stmt->execute([$role, $id]);
     }
 
-    /**
-     * Deletes an account (registrations are removed by the database cascade).
-     * Throws PDOException 1451 if the user still organizes events: the caller handles it.
-     */
+    /** Alias pour compatibilité avec admin_users.php */
+    public static function setRole(int $id, string $role): void
+    {
+        self::changeRole($id, $role);
+    }
+
+    /** Supprime un compte utilisateur */
     public static function delete(int $id): void
     {
         $stmt = db()->prepare('DELETE FROM users WHERE id = ?');
