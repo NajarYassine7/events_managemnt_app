@@ -77,4 +77,14 @@ class Venue
         ]);
         return (int)db()->lastInsertId();
     }
+
+    /**
+     * Deletes a venue. Throws a PDOException (code 1451) if events still use it
+     * (ON DELETE RESTRICT): the controller catches it and shows a message.
+     */
+    public static function delete(int $id): void
+    {
+        $stmt = db()->prepare('DELETE FROM venues WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 }

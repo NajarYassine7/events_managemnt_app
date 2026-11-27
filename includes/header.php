@@ -52,6 +52,7 @@ $roleLabels = [
 
                     <?php if ($navUser && $navUser['role'] === 'admin'): ?>
                         <a class="nav-link <?= $currentPage === 'admin_users.php' ? 'active' : '' ?>" href="admin_users.php">Gestion utilisateurs</a>
+                        <a class="nav-link <?= $currentPage === 'venues.php' ? 'active' : '' ?>" href="venues.php">Lieux</a>
                     <?php endif; ?>
                 </nav>
 

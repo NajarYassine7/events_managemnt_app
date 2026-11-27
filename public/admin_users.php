@@ -42,12 +42,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('admin_users.php');
 }
 
-$users = User::findAll();
+$q = trim((string)($_GET['q'] ?? ''));
+$roleFilter = (string)($_GET['role'] ?? '');
+if (!in_array($roleFilter, ['admin', 'organizer', 'participant'], true)) {
+    $roleFilter = '';
+}
+$users = User::search($q, $roleFilter);
 $pageTitle = 'Gestion des utilisateurs';
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container">
     <h1>Utilisateurs</h1>
+
+    <form method="get" class="filter-bar">
+        <input type="search" name="q" placeholder="Nom ou e-mail" value="<?= e($q) ?>">
+        <select name="role" aria-label="Filtrer par rôle">
+            <option value="">Tous les rôles</option>
+            <?php foreach (['admin', 'organizer', 'participant'] as $r): ?>
+                <option value="<?= $r ?>" <?= $roleFilter === $r ? 'selected' : '' ?>><?= $r ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit" class="primary">Filtrer</button>
+        <a href="admin_users.php" class="filter-reset">Réinitialiser</a>
+    </form>
+
     <table>
         <thead>
             <tr>
@@ -58,6 +76,12 @@ require __DIR__ . '/../includes/header.php';
             </tr>
         </thead>
         <tbody>
+            <?php if ($users === []): ?>
+                <tr>
+                    <td colspan="4">Aucun utilisateur trouvé.</td>
+                </tr>
+            <?php endif; ?>
+
             <?php foreach ($users as $u): ?>
                 <tr>
                     <td><?= e($u['name']) ?></td>
@@ -67,24 +91,27 @@ require __DIR__ . '/../includes/header.php';
                         <?php if ((int)$u['id'] === (int)$me['id']): ?>
                             <em>(vous)</em>
                         <?php else: ?>
-                            <form method="post" class="inline">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="action" value="role">
-                                <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-                                <select name="role" aria-label="Rôle de <?= e($u['name']) ?>">
-                                    <?php foreach (['participant', 'organizer', 'admin'] as $r): ?>
-                                        <option value="<?= $r ?>" <?= $u['role'] === $r ? ' selected' : '' ?>><?= $r ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="submit">Changer</button>
-                            </form>
-                            <form method="post" class="inline"
-                                onsubmit="return confirm('Supprimer ce compte et ses inscriptions ?');">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-                                <button type="submit">Supprimer</button>
-                            </form>
+                            <div class="row-actions">
+                                <form method="post" class="inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="role">
+                                    <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
+                                    <select name="role" aria-label="Rôle de <?= e($u['name']) ?>">
+                                        <?php foreach (['participant', 'organizer', 'admin'] as $r): ?>
+                                            <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $r ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit" class="btn-action">Changer</button>
+                                </form>
+
+                                <form method="post" class="inline"
+                                    onsubmit="return confirm('Supprimer ce compte et ses inscriptions ?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
+                                    <button type="submit" class="btn-danger">Supprimer</button>
+                                </form>
+                            </div>
                         <?php endif; ?>
                     </td>
                 </tr>
