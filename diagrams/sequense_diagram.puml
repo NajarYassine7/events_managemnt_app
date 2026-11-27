@@ -1,0 +1,54 @@
+@startuml
+actor "Organisateur / Administrateur" as Org
+participant "Formulaire d'événement" as Form
+participant EventController as Ctrl
+participant Venue
+participant Event
+database "Base de données" as DB
+
+== Ouverture du formulaire ==
+Org -> Form : Ouvrir « Créer un événement »
+Form -> Ctrl : GET /events/create
+Ctrl -> Ctrl : vérifier la session et le rôle\n(organisateur ou administrateur)
+alt non authentifié ou rôle non autorisé
+  Ctrl --> Org : redirection vers la connexion / erreur 403
+else autorisé
+  Ctrl -> Venue : lister les lieux
+  Venue -> DB : SELECT * FROM venues
+  DB --> Venue : lieux
+  Venue --> Ctrl : lieux
+  Ctrl --> Form : formulaire avec la liste des lieux
+end
+
+== Soumission ==
+Org -> Form : Saisir title, description, event_date,\nevent_time, venue_id, max_capacity
+Form -> Ctrl : POST /events (jeton CSRF)
+Ctrl -> Ctrl : valider les champs (title obligatoire,\nevent_date >= aujourd'hui, max_capacity >= 1)
+alt champs invalides
+  Ctrl --> Form : réaffichage avec messages d'erreur
+else champs valides
+  Ctrl -> Venue : find(venue_id)
+  Venue -> DB : SELECT lieu
+  DB --> Venue : lieu
+  Venue --> Ctrl : lieu
+  alt lieu introuvable
+    Ctrl --> Form : erreur « le lieu n'existe pas »
+  else max_capacity > capacité du lieu
+    Ctrl --> Form : erreur « la capacité dépasse celle du lieu »
+  else
+    Ctrl -> Event : rechercher un événement avec les mêmes\nvenue_id, event_date, event_time
+    Event -> DB : SELECT événement
+    DB --> Event : résultat
+    alt lieu déjà réservé
+      Event --> Ctrl : événement existant
+      Ctrl --> Form : erreur « lieu déjà réservé à cette date et heure »
+    else lieu disponible
+      Ctrl -> Event : create(données, organizer_id = utilisateur connecté)
+      Event -> DB : INSERT INTO events
+      DB --> Event : enregistré
+      Event --> Ctrl : événement
+      Ctrl --> Org : redirection vers « Mes événements » + message de succès
+    end
+  end
+end
+@enduml
