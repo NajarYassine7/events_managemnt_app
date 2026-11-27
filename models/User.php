@@ -56,6 +56,29 @@ class User
         $stmt->execute();
         return $stmt->fetchAll();
     }
+    
+    /** Recherche par nom ou e-mail, avec filtre optionnel par rôle */
+public static function search(string $q = '', string $role = ''): array
+{
+    $sql = 'SELECT ' . self::PUBLIC_COLUMNS . ' FROM users WHERE 1=1';
+    $params = [];
+
+    if ($q !== '') {
+        $sql .= ' AND (name LIKE ? OR email LIKE ?)';
+        $like = '%' . addcslashes($q, '%_\\') . '%';
+        $params[] = $like;
+        $params[] = $like;
+    }
+    if ($role !== '') {
+        $sql .= ' AND role = ?';
+        $params[] = $role;
+    }
+
+    $sql .= ' ORDER BY created_at DESC, id DESC';
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
 
     /** Alias pour compatibilité avec admin_users.php */
     public static function findAll(): array

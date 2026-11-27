@@ -773,3 +773,93 @@ th {
     color: var(--text-muted);
     font-size: 0.9rem;
 }
+/* Barre de recherche / filtre */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-bar input[type="search"] {
+    flex: 1 1 260px;   /* prend la place disponible */
+    width: auto;
+}
+
+.filter-bar select {
+    flex: 0 0 200px;
+    width: auto;
+}
+
+.filter-bar button.primary {
+    flex: 0 0 auto;
+    padding: 0.7rem 1.4rem;
+}
+
+.filter-bar .filter-reset {
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.filter-bar .filter-reset:hover {
+    text-decoration: underline;
+}
+/* Actions d'une ligne du tableau */
+.row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.row-actions form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.row-actions select {
+    width: auto;
+    min-width: 150px;
+    padding: 0.45rem 0.7rem;
+}
+
+/* Bouton secondaire (Changer) */
+.btn-action,
+.btn-danger {
+    width: auto;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-action {
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #c7d2fe;
+}
+
+.btn-action:hover {
+    background: #4f46e5;
+    color: #fff;
+    border-color: #4f46e5;
+}
+
+/* Bouton de suppression */
+.btn-danger {
+    background: #fff;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
