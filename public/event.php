@@ -27,8 +27,26 @@ require __DIR__ . '/../includes/header.php';
         <p><?= nl2br(e($event['description'] ?? '')) ?></p>
     </div>
 
-    <p><a href="events.php">← Retour à la liste</a></p>
-    <!-- Sprint 2 : boutons Modifier / Supprimer (organisateur propriétaire ou admin) -->
-    <!-- Sprint 3 (C) : bouton « S'inscrire » -->
+    <div class="btn-row">
+        <a class="btn-nav-outline" href="events.php">← Retour à la liste</a>
+        <?php if (Event::canManage($event, current_user())): ?>
+            <a class="btn-nav-primary" href="event_edit.php?id=<?= (int)$event['id'] ?>">Modifier</a>
+            <form method="post" action="event_delete.php" class="inline-form js-confirm-delete"
+                  data-title="<?= e($event['title']) ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= (int)$event['id'] ?>">
+                <button type="submit" class="btn-danger-outline">Supprimer</button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <?php
+    $box = __DIR__ . '/../includes/registration_box.php';   // fichier de C
+    if (is_file($box)) { require $box; }
+    ?>
+
+    <?php if (Event::canManage($event, current_user())): ?>
+        <?php require __DIR__ . '/../includes/confirm_delete.php'; ?>
+    <?php endif; ?>
 </main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
