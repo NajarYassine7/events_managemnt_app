@@ -3,17 +3,15 @@
 declare(strict_types=1);
 require __DIR__ . '/../includes/bootstrap.php';
 
+require_once __DIR__ . '/../models/Event.php';
+
 $user = current_user();
 
-// Récupération sécurisée de quelques évènements à la une depuis la base
 $featuredEvents = [];
 try {
-    $stmt = db()->query('SELECT id, title, description, starts_at FROM events ORDER BY starts_at ASC LIMIT 3');
-    if ($stmt !== false) {
-        $featuredEvents = $stmt->fetchAll();
-    }
-} catch (Throwable $e) {
-    $featuredEvents = [];
+    $featuredEvents = Event::upcoming(3);
+} catch (Throwable $ex) {
+    error_log('index.php: ' . $ex->getMessage());
 }
 
 $pageTitle = 'Accueil — EventHub';
@@ -123,10 +121,9 @@ require __DIR__ . '/../includes/header.php';
                 <?php foreach ($featuredEvents as $ev): ?>
                     <article class="event-preview-card">
                         <div>
-                            <?php if (!empty($ev['starts_at'])): ?>
+                            <?php if (!empty($ev['event_date'])): ?>
                                 <span class="event-date-tag">
-                                    <?= e(date('d/m/Y à H:i', strtotime((string)$ev['starts_at']))) ?>
-                                </span>
+                                    <?= e(date('d/m/Y', strtotime((string)$ev['event_date'])) . ' à ' . substr((string)$ev['event_time'], 0, 5)) ?> </span>
                             <?php endif; ?>
                             <h3><?= e((string)$ev['title']) ?></h3>
                             <p>

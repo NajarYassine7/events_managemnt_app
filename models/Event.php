@@ -37,13 +37,18 @@ class Event
     }
 
     /** Le lieu est-il déjà pris à cette date et cette heure ? */
-    public static function existsAt(int $venueId, string $date, string $time): bool
+    public static function existsAt(int $venueId, string $date, string $time, ?int $excludeEventId = null): bool
     {
-        $stmt = db()->prepare(
-            'SELECT COUNT(*) FROM events
-             WHERE venue_id = ? AND event_date = ? AND event_time = ?'
-        );
-        $stmt->execute([$venueId, $date, $time]);
+        $sql = 'SELECT COUNT(*) FROM events WHERE venue_id = ? AND event_date = ? AND event_time = ?';
+        $params = [$venueId, $date, $time];
+
+        if ($excludeEventId !== null) {
+            $sql .= ' AND id <> ?';
+            $params[] = $excludeEventId;
+        }
+
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
         return (int)$stmt->fetchColumn() > 0;
     }
 
@@ -51,7 +56,7 @@ class Event
      * Valide les données du formulaire (règles du diagramme de séquence).
      * Retourne [] si tout est bon, sinon ['champ' => 'message'].
      */
-    public static function validate(array $data): array
+    public static function validate(array $data, ?int $excludeEventId = null): array
     {
         $errors = [];
 
@@ -95,12 +100,41 @@ class Event
                     . (int)$venue['capacity'] . ' places).';
             }
             if (!isset($errors['event_date']) && !isset($errors['event_time'])
-                && self::existsAt($venueId, $date, $time)) {
+                && self::existsAt($venueId, $date, $time, $excludeEventId)) {
                 $errors['venue_id'] = 'Lieu déjà réservé à cette date et heure.';
             }
         }
-
         return $errors;
+    }
+
+    /** Vérifie si l'utilisateur peut modifier ou supprimer cet événement. */
+    public static function canManage(array $event, ?array $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+        return $user['role'] === 'admin'
+            || (int)$event['organizer_id'] === (int)$user['id'];
+    }
+
+    /** Liste filtrée des événements (ex. ['organizer_id' => 3]), avec le nom du lieu. */
+    public static function search(array $filters = []): array
+    {
+        $sql = 'SELECT e.id, e.title, e.event_date, e.event_time, e.max_capacity,
+                       v.name AS venue_name
+                FROM events e
+                JOIN venues v ON v.id = e.venue_id';
+        $params = [];
+
+        if (isset($filters['organizer_id'])) {
+            $sql .= ' WHERE e.organizer_id = ?';
+            $params[] = (int)$filters['organizer_id'];
+        }
+
+        $sql .= ' ORDER BY e.event_date, e.event_time';
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
     }
 
     /** Insère un événement et retourne son id. Appelez validate() avant. */
@@ -122,5 +156,49 @@ class Event
             $organizerId,
         ]);
         return (int)db()->lastInsertId();
+    }
+
+    /** Met à jour un événement existant. Appelez validate() avant. */
+    public static function update(int $id, array $data): void
+    {
+        $description = trim((string)($data['description'] ?? ''));
+        $stmt = db()->prepare(
+            'UPDATE events
+             SET title = ?, description = ?, event_date = ?, event_time = ?,
+                 venue_id = ?, max_capacity = ?
+             WHERE id = ?'
+        );
+        $stmt->execute([
+            trim((string)$data['title']),
+            $description === '' ? null : $description,
+            (string)$data['event_date'],
+            (string)$data['event_time'],
+            (int)$data['venue_id'],
+            (int)$data['max_capacity'],
+            $id,
+        ]);
+    }
+
+    /** Supprime un événement par son id. */
+    public static function delete(int $id): void
+    {
+        $stmt = db()->prepare('DELETE FROM events WHERE id = ?');
+        $stmt->execute([$id]);
+    }
+
+    /** Prochains événements (page d'accueil), avec le nom du lieu. */
+    public static function upcoming(int $limit = 3): array
+    {
+        $stmt = db()->prepare(
+            'SELECT e.id, e.title, e.description, e.event_date, e.event_time, v.name AS venue_name
+         FROM events e
+         JOIN venues v ON v.id = e.venue_id
+         WHERE TIMESTAMP(e.event_date, e.event_time) >= NOW()
+         ORDER BY e.event_date, e.event_time
+         LIMIT ?'
+        );
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 }
