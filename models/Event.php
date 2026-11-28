@@ -86,6 +86,17 @@ class Event
         $capacity = filter_var($data['max_capacity'] ?? null, FILTER_VALIDATE_INT, [
             'options' => ['min_range' => 1],
         ]);
+                if ($excludeEventId !== null && $capacity !== false) {
+            // editing: never go below the seats already taken (pending + confirmed)
+            $stmt = db()->prepare(
+                "SELECT COUNT(*) FROM registrations WHERE event_id = ? AND status IN ('pending', 'confirmed')"
+            );
+            $stmt->execute([$excludeEventId]);
+            $taken = (int)$stmt->fetchColumn();
+            if ($capacity < $taken) {
+                $errors['max_capacity'] = 'Capacité inférieure aux places déjà réservées (' . $taken . ').';
+            }
+        }
         if ($capacity === false) {
             $errors['max_capacity'] = 'Capacité minimale : 1.';
         }
@@ -114,7 +125,7 @@ class Event
             return false;
         }
         return $user['role'] === 'admin'
-            || (int)$event['organizer_id'] === (int)$user['id'];
+    || ($user['role'] === 'organizer' && (int)$event['organizer_id'] === (int)$user['id']);
     }
 
     /** Liste filtrée des événements (ex. ['organizer_id' => 3]), avec le nom du lieu. */
